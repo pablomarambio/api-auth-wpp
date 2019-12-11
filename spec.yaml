@@ -61,7 +61,7 @@ paths:
       - "auth"
       summary: "Autentica a un cliente con sus credenciales básicas"
       description: |
-        Permite que un cliente de Tenpo se autentique con su **RUT** o su **Email**.
+        Permite que un cliente de Tenpo se autentique con su **RUT** o su **Email**. Valida que la tarjeta corresponda al cliente.
         
         # Códigos de error
         * 1150: El cliente no existe o está bloqueado
@@ -72,7 +72,7 @@ paths:
       parameters:
       - in: "body"
         name: "body"
-        description: "Par `[RUT, Clave]` o `[Email, Clave]`"
+        description: "Tupla `[Pan, RUT, Clave]` o `[Pan, Email, Clave]`"
         required: true
         schema:
           $ref: "#/definitions/credentials_new"
