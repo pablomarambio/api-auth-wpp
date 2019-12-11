@@ -11,6 +11,7 @@ info:
     * **1202:** (HTTP 422) El desafío no se puede crear porque tiene una respuesta final que fue exitoso o fallido
     * **1400:** (HTTP 422) No se proporcionó ni RUT ni Email
     * **1410:** (HTTP 404) Credenciales inválidas  
+    * **1411:** (HTTP 404) El PAN no corresponde al cliente
     * **1500:** (HTTP 422) El cliente no soporta ese método de 2fa
     
     # Data de prueba
@@ -66,6 +67,7 @@ paths:
         * 1150: El cliente no existe o está bloqueado
         * 1400: No se proporcionó ni RUT ni Email
         * 1410: Credenciales inválidas
+        * 1411: El PAN no corresponde al cliente
       operationId: "login"
       parameters:
       - in: "body"
@@ -261,9 +263,15 @@ paths:
 definitions:
   credentials_new:
     type: "object"
-    required: [clave]
-    description: Permite autenticar con el par [Rut, clave] o [Email, clave]
+    required:
+      - pan
+      - clave
+    description: Permite autenticar un cliente con la tupla  [Pan, Rut, clave] o [Pan, Email, clave]
     properties:
+      pan:
+        type: "string"
+        description: "el PAN truncado de la tarjeta"
+        example: "517608******1234"
       rut:
         type: "number"
         format: "int64"
