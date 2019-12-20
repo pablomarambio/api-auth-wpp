@@ -57,6 +57,8 @@ produces:
 paths:
   /login:
     post:
+      security:
+        - ApiKeyAuth: []
       tags:
       - "auth"
       summary: "Autentica a un cliente con sus credenciales básicas"
@@ -93,6 +95,9 @@ paths:
             "application/json": { "code": 1400, "message": "No se proporcionó ni RUT ni Email" }
   /2fa:
     post:
+      security:
+        - ApiKeyAuth: []
+        - bearerAuth: []
       tags:
       - "auth"
       summary: "Crea un desafío"
@@ -122,6 +127,10 @@ paths:
         * 1500: El cliente no soporta ese método de 2fa.
       operationId: "2fa-create"
       parameters:
+      -   name: authorization
+          in: header
+          type: string
+          required: true
       - in: "body"
         name: "body"
         description: "Desafío para el cliente"
@@ -138,6 +147,9 @@ paths:
           examples: 
             "application/json": { "code": 1200, "message": "El desafío expiró" }
     put:
+      security:
+        - ApiKeyAuth: []
+        - bearerAuth: []
       tags:
       - "auth"
       summary: "Valida un desafío"
@@ -151,6 +163,10 @@ paths:
         * 1201: Ya se recibió un desafío con ese `external_id`, y no se puede validar porque fue cancelado
       operationId: "2fa-validate"
       parameters:
+      - name: authorization
+        in: header
+        type: string
+        required: true
       - in: "body"
         name: "body"
         description: "Resultado del desafío, ingresado por el cliente"
@@ -175,6 +191,9 @@ paths:
           examples: 
             "application/json": { "code": 1201, "message": "El desafío ya tuvo un desenlace" }
     delete:
+      security:
+        - ApiKeyAuth: []
+        - bearerAuth: []
       tags:
       - "auth"
       summary: "Aborta un desafío"
@@ -189,6 +208,10 @@ paths:
         * 1202: Ya se recibió un desafío con ese `external_id`, y no se puede abortar porque fue exitoso o fallido (`AUTH_EXITOSA` o `AUTH_FALLIDA`)
       operationId: "2fa-abort"
       parameters:
+      - name: authorization
+        in: header
+        type: string
+        required: true
       - in: "body"
         name: "body"
         description: "ID del desafío abortado"
@@ -208,6 +231,9 @@ paths:
             $ref: "#/definitions/error_new"
   /2fa/challenge_types:
     get:
+      security:
+        - ApiKeyAuth: []
+        - bearerAuth: []
       tags:
       - "auth"
       summary: "Lista los mpetodos de autenticación 2fa"
@@ -218,14 +244,10 @@ paths:
         * 1150: El cliente no existe o está bloqueado
       operationId: "2fa-list"
       parameters:
-      - in: "body"
-        name: "body"
-        description: "UUID de Cliente"
+      - name: authorization
+        in: header
+        type: string
         required: true
-        schema:
-          type: "string"
-          description: "UUID de Cliente en API-Users"
-          example: "ef717ce5-ac3e-499c-840a-0da15e87943d"
       responses:
         200:
           description: "Lista adjunta"
@@ -242,6 +264,9 @@ paths:
             "application/json": { "code": 1150, "message": "El cliente no existe o está bloqueado" }
   /callback-2fa:
     post:
+      security:
+      - ApiKeyAuth: []
+      - bearerAuth: []
       tags:
       - "auth"
       summary: "Notifica de una autenticación en APP"
@@ -251,6 +276,10 @@ paths:
         Toda respuesta de este método será ingorada.
       operationId: "2fa-callback"
       parameters:
+      - name: authorization
+        in: header
+        type: string
+        required: true
       - in: "body"
         name: "body"
         description: "Resultado del challenge"
@@ -303,27 +332,22 @@ definitions:
   user_summary:
     type: "object"
     required:
-      - user_id
-      - rut
-      - email
+      - token
     description: |
       Resumen del cliente que se retorna ante una autenticación exitosa
     properties:
-      user_id:
+      token_type:
         type: "string"
-        description: "UUID de Cliente en API-Users"
-        example: "ef717ce5-ac3e-499c-840a-0da15e87943d"
-      rut:
+        description: "Tipo de token "
+        example: "Bearer"
+      expires_in:
         type: "number"
-        format: "int64"
-        description: "El Rut sin dígito verificador"
+        format: "double"
+        description: "Tiempo de expiracion del token"
         example: 14569484
-      email:
+      access_token:
         type: "string"
-        description: "El email del cliente"
-        example: "yo@minombre.cl"
-      balance:
-        $ref: "#/definitions/amount_and_currency_new"
+        description: "Token JWT"
   transaction_context:
     type: "object"
     required:
