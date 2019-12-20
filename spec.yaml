@@ -6,6 +6,8 @@ info:
     # Códigos de error
     * **1100:** (HTTP 404) No se encontró un desafío asociado al `external_id`
     * **1150:** (HTTP 404) El cliente no existe o está bloqueado
+    * **1151:** (HTTP 404) Clave bloqueada
+    * **1152:** (HTTP 404) Dispositivo bloqueado
     * **1200:** (HTTP 422) El desafío expiró
     * **1201:** (HTTP 422) El desafío ya fue cancelado
     * **1202:** (HTTP 422) El desafío no se puede crear porque tiene una respuesta final que fue exitoso o fallido
@@ -57,8 +59,6 @@ produces:
 paths:
   /login:
     post:
-      security:
-        - ApiKeyAuth: []
       tags:
       - "auth"
       summary: "Autentica a un cliente con sus credenciales básicas"
@@ -67,6 +67,7 @@ paths:
         
         # Códigos de error
         * 1150: El cliente no existe o está bloqueado
+        * 1151: Clave Bloqueada 
         * 1400: No se proporcionó ni RUT ni Email
         * 1410: Credenciales inválidas
         * 1411: El PAN no corresponde al cliente
@@ -95,9 +96,6 @@ paths:
             "application/json": { "code": 1400, "message": "No se proporcionó ni RUT ni Email" }
   /2fa:
     post:
-      security:
-        - ApiKeyAuth: []
-        - bearerAuth: []
       tags:
       - "auth"
       summary: "Crea un desafío"
@@ -122,6 +120,7 @@ paths:
         
         # Códigos de error
         * 1150: El cliente no existe o está bloqueado
+        * 1152: Dispositivo bloqueado
         * 1200: Ya se generó un desafío con ese `external_id` y ha expirado.
         * 1201: Ya se generó un desafío con ese `external_id` y fue cancelado.
         * 1500: El cliente no soporta ese método de 2fa.
@@ -147,9 +146,6 @@ paths:
           examples: 
             "application/json": { "code": 1200, "message": "El desafío expiró" }
     put:
-      security:
-        - ApiKeyAuth: []
-        - bearerAuth: []
       tags:
       - "auth"
       summary: "Valida un desafío"
@@ -158,6 +154,7 @@ paths:
         
         # Códigos de error
         * 1150: El cliente no existe o está bloqueado. (Para este método, cuando se reintenta 4 o más veces el ingreso de un OTP de forma errada, sea cual sea su challenge_type)
+        * 1152: Dispositivo bloqueado
         * 1100: No se encontró el `external_id`. Llame primero a `POST`
         * 1200: Ya se recibió un desafío con ese `external_id`, y no se puede validar porque ha expirado
         * 1201: Ya se recibió un desafío con ese `external_id`, y no se puede validar porque fue cancelado
@@ -191,9 +188,6 @@ paths:
           examples: 
             "application/json": { "code": 1201, "message": "El desafío ya tuvo un desenlace" }
     delete:
-      security:
-        - ApiKeyAuth: []
-        - bearerAuth: []
       tags:
       - "auth"
       summary: "Aborta un desafío"
@@ -231,15 +225,13 @@ paths:
             $ref: "#/definitions/error_new"
   /2fa/challenge_types:
     get:
-      security:
-        - ApiKeyAuth: []
-        - bearerAuth: []
       tags:
       - "auth"
       summary: "Lista los mpetodos de autenticación 2fa"
       description: |
-       Retorna los `challenge_type` soportados por este cliente, los que pueden ser uno o más de: OTP_GENERATOR|OTP_PUSH|OTP_SMS|OTP_MAIL|APP
-        
+       Retorna los `challenge_type` soportados por este cliente, los que pueden ser uno o más de: OTP_GENERATOR|OTP_PUSH|OTP_SMS|OTP_MAIL|APP 
+        Si la lista viene vacia debe mostrar un mensaje de error al cliente  
+    
         # Códigos de error
         * 1150: El cliente no existe o está bloqueado
       operationId: "2fa-list"
@@ -248,14 +240,6 @@ paths:
         in: header
         type: string
         required: true
-      - in: "body"
-        name: "body"
-        description: "UUID de Cliente"
-        required: true
-        schema:
-          type: "string"
-          description: "UUID de Cliente en API-Users"
-          example: "ef717ce5-ac3e-499c-840a-0da15e87943d"
       responses:
         200:
           description: "Lista adjunta"
@@ -272,9 +256,6 @@ paths:
             "application/json": { "code": 1150, "message": "El cliente no existe o está bloqueado" }
   /callback-2fa:
     post:
-      security:
-      - ApiKeyAuth: []
-      - bearerAuth: []
       tags:
       - "auth"
       summary: "Notifica de una autenticación en APP"
